@@ -11,33 +11,27 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class GameHelpTableCommand extends Command
 {
-    protected function callHelp(OutputInterface $output): int
+    private array $rows;
+    private object $win;
+    private object $lose;
+    private object $draw;
+    protected function callHelp(OutputInterface $output, array $moves): int
     {
         $table = new Table($output);
-        $win = new TableCell('You win', ['style' => new TableCellStyle([
-            'align' => 'center',
-            'bg' => 'green',
-        ])
-        ]);
-        $lose = new TableCell('Computer wins', ['style' => new TableCellStyle([
-            'align' => 'center',
-            'bg' => 'red',
-        ])
-        ]);
-        $draw = new TableCell('Draw', ['style' => new TableCellStyle([
-            'align' => 'center',
-            'bg' => 'gray',
-        ])
-        ]);
+        $this->buildPossibleResults();
+        $headerRow = $moves;
+        array_unshift($headerRow, "");
+
+        $this->buildTableRows($moves);
         $table
             ->setHeaders([
                 [new TableCell(
-                    'Possible game results for 5 moves (Rock-Scissors-Paper-Lizard-Spoke)',
+                    "Possible game results for " . count($moves) . " moves",
                     [
                         'style' => new TableCellStyle([
                             'align' => 'center',
                         ]),
-                        'colspan' => 6
+                        'colspan' => count($moves)+1
                     ]
                 )],
                 [
@@ -51,36 +45,59 @@ class GameHelpTableCommand extends Command
                     'style' => new TableCellStyle([
                         'align' => 'center',
                     ]),
-                    'colspan' => 5
+                    'colspan' => count($moves)
                     ])
                 ],
             ])
             ->setRows([
-                ['', 'Rock', 'Scissors', 'Paper', 'Lizard', 'Spoke'],
-                new TableSeparator(),
-                ['Rock', $draw, $win, $win, $lose, $lose],
-                new TableSeparator(),
-                ['Scissors', $lose, $draw, $win, $win, $lose],
-                new TableSeparator(),
-                ['Paper', $lose, $lose, $draw, $win, $win],
-                new TableSeparator(),
-                ['Lizard', $win, $lose, $lose, $draw, $win],
-                new TableSeparator(),
-                ['Spoke', $win, $win, $lose, $lose, $draw]
+                $headerRow
             ]);
-        $output->writeln([
-            str_repeat("-", 15) . " Help desk " . str_repeat("-", 15),
-            "How to play the game?",
-            "Both You and computer pick one weapon of your choice.",
-            "Each weapon is stronger than the following half of weapons and is weaker " .
-            "than previous half of weapons. Weapons order is looped i.e.:",
-            "... < Weapon 3 < Weapon 1 < Weapon 2 < Weapon 3 < Weapon 1 < ...",
-            "For example, if we have 5 possible weapons then game results would be as follows:"
-            ]
-        );
+        for ($i = 0; $i < count($moves); $i++) {
+            $table->addRow(new TableSeparator());
+            $table->addRow($this->rows[$i]);
+        }
         $table->setStyle('box-double');
         $table->render();
 
         return Command::SUCCESS;
+    }
+
+    private function buildTableRows(array $moves): void
+    {
+        for ($i = 0; $i < count($moves); $i++) {
+            $weapon[$i] = new TableCell($moves[$i], ['style' => new TableCellStyle([
+                'align' => 'center',
+            ])
+            ]);
+            for ($j = 0; $j < count($moves); $j++) {
+                if ($i === $j) {
+                    $this->rows[$i][$j] = $this->draw;
+                } elseif ($i < $j) {
+                    $this->rows[$i][$j] = (abs($i - $j) < count($moves) / 2) ? $this->win : $this->lose;
+                } else {
+                    $this->rows[$i][$j] = (abs($i - $j) >= count($moves) / 2) ? $this->win : $this->lose;
+                }
+            }
+            array_unshift($this->rows[$i], $weapon[$i]);
+        }
+    }
+    private function buildPossibleResults(): void
+    {
+        $this->win = new TableCell('You win', ['style' => new TableCellStyle([
+            'align' => 'center',
+            'bg' => 'green',
+        ])
+        ]);
+        $this->lose = new TableCell('Computer wins', ['style' => new TableCellStyle([
+            'align' => 'center',
+            'bg' => 'red',
+        ])
+        ]);
+        $this->draw = new TableCell('Draw', ['style' => new TableCellStyle([
+            'align' => 'center',
+            'bg' => 'gray',
+        ])
+        ]);
+
     }
 }
