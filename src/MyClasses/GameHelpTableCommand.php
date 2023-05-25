@@ -14,13 +14,25 @@ class GameHelpTableCommand extends Command
     protected function callHelp(OutputInterface $output): int
     {
         $table = new Table($output);
-        $win = "You win";
-        $lose = "Computer wins";
-        $draw = "Draw";
+        $win = new TableCell('You win', ['style' => new TableCellStyle([
+            'align' => 'center',
+            'bg' => 'green',
+        ])
+        ]);
+        $lose = new TableCell('Computer wins', ['style' => new TableCellStyle([
+            'align' => 'center',
+            'bg' => 'red',
+        ])
+        ]);
+        $draw = new TableCell('Draw', ['style' => new TableCellStyle([
+            'align' => 'center',
+            'bg' => 'yellow',
+        ])
+        ]);
         $table
             ->setHeaders([
                 [new TableCell(
-                    'Possible game results for 5 weapons (Rock-Scissors-Paper-Lizard-Spoke)',
+                    'Possible game results for 5 moves (Rock-Scissors-Paper-Lizard-Spoke)',
                     [
                         'style' => new TableCellStyle([
                             'align' => 'center',
@@ -28,7 +40,22 @@ class GameHelpTableCommand extends Command
                         'colspan' => 6
                     ]
                 )],
-                ['Your weapon: \ Computer weapon:', 'Rock', 'Scissors', 'Paper', 'Lizard', 'Spoke'],
+                [
+                    new TableCell("Your move:", [
+                        'style' => new TableCellStyle([
+                            'align' => 'center',
+                        ]),
+
+                    ]),
+                    new TableCell('Computer move:', [
+                    'style' => new TableCellStyle([
+                        'align' => 'center',
+                        'fg' => 'green',
+                    ]),
+                    'colspan' => 5
+                    ])
+                ],
+                ['', 'Rock', 'Scissors', 'Paper', 'Lizard', 'Spoke'],
             ])
             ->setRows([
                 ['Rock', $draw, $win, $win, $lose, $lose],
@@ -43,7 +70,8 @@ class GameHelpTableCommand extends Command
             ]);
         $output->writeln("Both You and computer pick one weapon of your choice.");
         $output->writeln("Each weapon is stronger than the following half of weapons and is weaker " .
-            "than previous half of weapons (weapons order is looped).");
+            "than previous half of weapons. Weapons order is looped i/e/:");
+        $output->writeln("... < Weapon 3 < Weapon 1 < Weapon 2 < Weapon 3 < Weapon 1 < ...");
         $output->writeln("For example, if we have 5 possible weapons then game results would be as follows:");
         $table->setStyle('box-double');
         $table->render();
