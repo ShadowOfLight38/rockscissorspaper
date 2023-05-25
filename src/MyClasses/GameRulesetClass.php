@@ -56,7 +56,7 @@ class GameRulesetClass
     }
     public function buildHmacKey(string $computerMove, string $secretKey): void
     {
-        echo "Computer move: " . $computerMove . PHP_EOL; echo "Secret key: " . $secretKey . "\n";
+//        echo "Computer move: " . $computerMove . PHP_EOL; echo "Secret key: " . $secretKey . "\n";
         $this->hmacKey = hash_hmac('sha3-256', $computerMove, $secretKey);
     }
 }
