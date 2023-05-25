@@ -8,8 +8,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
 use App\MyClasses\GameRulesetClass;
-use Symfony\Component\Console\Exception\RuntimeException;
-
 
 class GameCliCommand extends GameHelpTableCommand
 {
@@ -31,53 +29,74 @@ class GameCliCommand extends GameHelpTableCommand
     }
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $helper = $this->getHelper('question');
+        if ($input->getArgument('weapons') !== array_unique($input->getArgument('weapons'))) {
+            $output->writeln([
+                'All weapons should be unique!',
+                "Correct: 'Rock Paper Scissors' or '1 2 3'. Incorrect: 'Rock Paper Rock' or '1 2 2'."
+            ]);
+        } elseif (count($input->getArgument('weapons')) < 3) {
+            $output->writeln('Please enter at least three weapons to launch the game.');
+        } elseif (count($input->getArgument('weapons'))%2 === 0) {
+            $output->writeln("You should enter odd quantity of unique weapons (3, 5, 7 etc.)!");
+        } else {
+            $object = new GameRulesetClass($input->getArgument('weapons'));
+            $output->writeln([
+                'Welcome to the game of Rock-Scissors-Paper!',
+                'Computer has chosen his move!',
+                'HMAC: ' . $object->getHmacKey(),
+                'Available moves:'
+            ]);
+
+            $this->setUpPossibleUserChoices($input);
+
+            foreach ($this->possibleUserChoices as $id => $choice) {
+                $output->writeln($id . " - " . $choice);
+            }
+            $requestForUserChoice = new Question(
+                'Please choose a move (number) to fight computer: '
+            );
+            $requestForUserChoice->setValidator(function ($answer)
+                {
+                    if (!array_key_exists($answer, $this->possibleUserChoices)) {
+                        throw new \RuntimeException(
+                            "Please enter number of move, '0' to exit or '?' to show help."
+                        );
+                    }
+                    return $answer;
+                }
+            );
+            $requestForUserChoice->setMaxAttempts(null);
+            $userChoice = $helper->ask($input, $output, $requestForUserChoice);
+
+            if ($userChoice === "0") {
+                echo "Thank you for playing! Come again!";
+            } elseif ($userChoice === '?') {
+                $help = new GameHelpTableCommand();
+                $help->callHelp($output, $input->getArgument('weapons'));
+            } else {
+                $userMove = $this->possibleUserChoices[$userChoice];
+                $resultClass = new GameResultsClass(
+                    $input->getArgument('weapons'),
+                    $object->getComputerMove(),
+                    $userMove
+                );
+                echo "Your move: \e[96m" . $userMove . "\e[39m\n";
+                echo "Computer move: \e[96m" . $object->getComputerMove() . "\e[39m\n";
+                echo $resultClass->showResults($object->getComputerMove(), $userMove) . PHP_EOL;
+                echo "HMAC key: " . $object->getSecretKey() . PHP_EOL;
+            }
+
+        }
+        return Command::SUCCESS;
+    }
+
+    private function setUpPossibleUserChoices(InputInterface $input): void
+    {
         foreach ($input->getArgument('weapons') as $id => $weapon) {
             $this->possibleUserChoices[$id+1] = $weapon;
         }
         $this->possibleUserChoices['0'] = 'exit';
         $this->possibleUserChoices['?'] = 'help';
-
-        $helper = $this->getHelper('question');
-        if (count($input->getArgument('weapons')) < 3) {
-            $output->writeln('Please enter at least three weapons to launch the game.');
-        } elseif (count($input->getArgument('weapons'))%2 === 0) {
-            $output->writeln('You should enter odd quantity of weapons (3, 5, 7 etc.)!');
-        } else {
-            $object = new GameRulesetClass($this->possibleUserChoices);
-            $output->writeln('Welcome to the game of Rock-Scissors-Paper!');
-            $output->writeln('Computer has chosen the weapon to use!');
-            $output->writeln('HMAC: ' . $object->getHmacKey());
-            $output->writeln('Available moves:');
-            foreach ($this->possibleUserChoices as $id => $choice) {
-                $output->writeln($id . " - " . $choice);
-            }
-            $question = new Question(
-                'Please choose a weapon (write weapon number) to fight computer: '
-            );
-            $question->setValidator(function ($answer)
-                {
-                    if (!array_key_exists($answer, $this->possibleUserChoices)) {
-                        throw new RuntimeException(
-                            "Please enter number of move or '?'."
-                        );
-                    }
-
-                    return $answer;
-                }
-            );
-            $question->setMaxAttempts(null);
-            $userMove = $helper->ask($input, $output, $question);
-
-            if ($userMove === "0") {
-                echo "Thank you for playing! Come again!";
-            } elseif ($userMove === '?') {
-                $help = new GameHelpTableCommand();
-                $help->callHelp($output);
-            } else {
-                $output->writeln($object->calculateResultOfGame($object->getComputerMove(), $userMove));
-            }
-
-        }
-        return Command::SUCCESS;
     }
 }
