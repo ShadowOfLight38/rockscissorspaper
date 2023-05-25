@@ -1,0 +1,12 @@
+# ignoring autoloader files&folders in GIT
+/vendor/
+
+# also ignoring docker's README.html
+phpdocker/README.html
+
+# ignoring PHPstorm files
+/.idea
+
+# all logs and/or cached files
+*.log
+*.cache
