@@ -26,7 +26,7 @@ class GameHelpTableCommand extends Command
         ]);
         $draw = new TableCell('Draw', ['style' => new TableCellStyle([
             'align' => 'center',
-            'bg' => 'yellow',
+            'bg' => 'gray',
         ])
         ]);
         $table
