@@ -68,11 +68,16 @@ class GameHelpTableCommand extends Command
                 new TableSeparator(),
                 ['Spoke', $win, $win, $lose, $lose, $draw]
             ]);
-        $output->writeln("Both You and computer pick one weapon of your choice.");
-        $output->writeln("Each weapon is stronger than the following half of weapons and is weaker " .
-            "than previous half of weapons. Weapons order is looped i/e/:");
-        $output->writeln("... < Weapon 3 < Weapon 1 < Weapon 2 < Weapon 3 < Weapon 1 < ...");
-        $output->writeln("For example, if we have 5 possible weapons then game results would be as follows:");
+        $output->writeln([
+            str_repeat("-", 15) . " Help desk " . str_repeat("-", 15),
+            "How to play the game?",
+            "Both You and computer pick one weapon of your choice.",
+            "Each weapon is stronger than the following half of weapons and is weaker " .
+            "than previous half of weapons. Weapons order is looped i.e.:",
+            "... < Weapon 3 < Weapon 1 < Weapon 2 < Weapon 3 < Weapon 1 < ...",
+            "For example, if we have 5 possible weapons then game results would be as follows:"
+            ]
+        );
         $table->setStyle('box-double');
         $table->render();
 
